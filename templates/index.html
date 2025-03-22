@@ -17,6 +17,7 @@
             background-color: #f4f4f4;
             padding: 20px;
             text-align: center;
+            overflow-y: auto;
         }
 
         /* Contenitore centrale */
@@ -48,21 +49,20 @@
             margin-bottom: 15px;
         }
 
-        /* Stile del pulsante "Visualizza Modello PDF" */
-        .pdf-button {
-            background: #28a745;
+        /* Pulsanti */
+        .pdf-button, .generate-button, .clear-button {
+            background: #007bff;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
             width: 100%;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
-        .pdf-button:hover {
-            background: #218838;
-        }
+        .pdf-button:hover { background: #218838; }
+        .generate-button:hover, .clear-button:hover { background: #0056b3; }
 
         /* Form */
         form {
@@ -90,23 +90,11 @@
             border-radius: 5px;
             background: white;
             margin-top: 5px;
-        }
-
-        /* Pulsanti */
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
             width: 100%;
+            max-width: 300px;
+            height: 100px;
         }
 
-        button:hover {
-            background: #0056b3;
-        }
     </style>
 </head>
 <body>
@@ -140,30 +128,63 @@
             <input type="text" id="nie" name="nie" required>
 
             <label for="firma">Firma:</label>
-            <canvas id="firmaCanvas" width="300" height="100"></canvas>
-            <button type="button" onclick="clearCanvas('firmaCanvas')">Cancella Firma</button>
+            <canvas id="firmaCanvas"></canvas>
+            <button type="button" class="clear-button" onclick="firmaPad.clear()">Cancella Firma</button>
 
             <label for="sello">Sello:</label>
-            <canvas id="selloCanvas" width="300" height="100"></canvas>
-            <button type="button" onclick="clearCanvas('selloCanvas')">Cancella Sello</button>
+            <canvas id="selloCanvas"></canvas>
+            <button type="button" class="clear-button" onclick="selloPad.clear()">Cancella Sello</button>
 
-            <button type="submit">Genera PDF</button>
+            <button type="button" class="generate-button" id="generate-pdf">Genera PDF</button>
         </form>
     </div>
 
     <script>
-        // Funzione per aprire il modello PDF in una nuova scheda
+        // 📌 Apri il modello PDF in una nuova scheda
         function openPDF() {
             window.open("{{ url_for('static', filename='modello.pdf') }}", "_blank");
         }
 
-        // Funzione per pulire le firme
-        function clearCanvas(canvasId) {
-            var canvas = document.getElementById(canvasId);
-            var ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-    </script>
+        // 📌 Inizializza SignaturePad per firma e sello
+        document.addEventListener("DOMContentLoaded", function () {
+            const firmaCanvas = document.getElementById("firmaCanvas");
+            const firmaPad = new SignaturePad(firmaCanvas);
 
+            const selloCanvas = document.getElementById("selloCanvas");
+            const selloPad = new SignaturePad(selloCanvas);
+
+            document.getElementById("generate-pdf").addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const nomeCognome = document.getElementById("nome_cognome").value;
+                const nie = document.getElementById("nie").value;
+                const firma = firmaPad.toDataURL();
+                const sello = selloPad.toDataURL();
+
+                fetch("/fill-pdf", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        nome_cognome: nomeCognome,
+                        nie: nie,
+                        firma: firma,
+                        sello: sello
+                    })
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "documento_compilato.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error("Errore:", error));
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/2.3.2/signature_pad.min.js"></script>
 </body>
 </html>
