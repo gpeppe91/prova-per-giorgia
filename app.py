@@ -98,4 +98,4 @@ def fill_pdf():
             os.remove(sello_path)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
