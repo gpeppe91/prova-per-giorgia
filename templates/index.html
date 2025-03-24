@@ -95,6 +95,7 @@
             border-radius: 5px;
             background: white;
             height: 100px;
+            touch-action: none;
         }
     </style>
 </head>
@@ -122,11 +123,11 @@
 
             <label for="firma">Firma:</label>
             <canvas id="firmaCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="clearCanvas('firmaCanvas')">Cancella Firma</button>
+            <button type="button" class="clear-button" onclick="firmaPad.clear()">Cancella Firma</button>
 
             <label for="sello">Sello:</label>
             <canvas id="selloCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="clearCanvas('selloCanvas')">Cancella Sello</button>
+            <button type="button" class="clear-button" onclick="selloPad.clear()">Cancella Sello</button>
 
             <button type="button" class="generate-button" id="generate-pdf">Genera PDF</button>
         </form>
@@ -138,15 +139,11 @@
             window.open("{{ url_for('static', filename='modello.pdf') }}", "_blank");
         }
 
-        function clearCanvas(canvasId) {
-            const canvas = document.getElementById(canvasId);
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
         document.addEventListener("DOMContentLoaded", function () {
-            const firmaPad = new SignaturePad(document.getElementById("firmaCanvas"));
-            const selloPad = new SignaturePad(document.getElementById("selloCanvas"));
+            const firmaCanvas = document.getElementById("firmaCanvas");
+            const firmaPad = new SignaturePad(firmaCanvas, { minWidth: 1, maxWidth: 3 });
+            const selloCanvas = document.getElementById("selloCanvas");
+            const selloPad = new SignaturePad(selloCanvas, { minWidth: 1, maxWidth: 3 });
 
             document.getElementById("generate-pdf").addEventListener("click", function (event) {
                 event.preventDefault();

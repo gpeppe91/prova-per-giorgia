@@ -20,16 +20,14 @@ def form():
 @app.route('/fill-pdf', methods=['POST'])
 def fill_pdf():
     data = request.json
-    nome_cognome = data["nome_cognome"].strip()
-    nie = data["nie"]
+    nome_cognome = data.get("nome_cognome", "").strip()
+    nie = data.get("nie", "").strip()
 
     if not nome_cognome:
         filename = "Documento.pdf"
     else:
-        nome_cognome = re.sub(r'[\/:*?"<>|]', "", nome_cognome)
+        nome_cognome = re.sub(r'[\\/:*?"<>|]', "", nome_cognome)
         filename = f"{nome_cognome}_documentoFirmato.pdf"
-
-
 
     def mm_to_pt(mm):
         return mm * 2.83
@@ -53,8 +51,8 @@ def fill_pdf():
             print(f"Errore nella conversione dell'immagine: {e}")
             return None
 
-    firma_path = convert_base64_to_png(data["firma"]) if data["firma"].startswith("data:image/png;base64,") else None
-    sello_path = convert_base64_to_png(data["sello"]) if data["sello"].startswith("data:image/png;base64,") else None
+    firma_path = convert_base64_to_png(data.get("firma", ""))
+    sello_path = convert_base64_to_png(data.get("sello", ""))
 
     try:
         with open(PDF_TEMPLATE_PATH, "rb") as template_file:
@@ -84,15 +82,10 @@ def fill_pdf():
 
             output_pdf = io.BytesIO()
             pdf_writer.write(output_pdf)
+            pdf_writer.close()
             output_pdf.seek(0)
 
-        print(f" Il file generato sarà: {filename}")
-
-        try:
-            return send_file(output_pdf, as_attachment=True, download_name=filename)
-        except TypeError:
-            return send_file(output_pdf, as_attachment=True, attachment_filename=filename)
-
+        return send_file(output_pdf, as_attachment=True, download_name=filename)
     finally:
         if firma_path and os.path.exists(firma_path):
             os.remove(firma_path)
@@ -100,4 +93,4 @@ def fill_pdf():
             os.remove(sello_path)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
