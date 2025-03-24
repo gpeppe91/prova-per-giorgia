@@ -123,11 +123,11 @@
 
             <label for="firma">Firma:</label>
             <canvas id="firmaCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="firmaPad.clear()">Cancella Firma</button>
+            <button type="button" class="clear-button" id="clearFirma">Cancella Firma</button>
 
             <label for="sello">Sello:</label>
             <canvas id="selloCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="selloPad.clear()">Cancella Sello</button>
+            <button type="button" class="clear-button" id="clearSello">Cancella Sello</button>
 
             <button type="button" class="generate-button" id="generate-pdf">Genera PDF</button>
         </form>
@@ -140,10 +140,15 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
-            const firmaCanvas = document.getElementById("firmaCanvas");
-            const firmaPad = new SignaturePad(firmaCanvas, { minWidth: 1, maxWidth: 3 });
-            const selloCanvas = document.getElementById("selloCanvas");
-            const selloPad = new SignaturePad(selloCanvas, { minWidth: 1, maxWidth: 3 });
+            const firmaPad = new SignaturePad(document.getElementById("firmaCanvas"));
+            const selloPad = new SignaturePad(document.getElementById("selloCanvas"));
+
+            document.getElementById("clearFirma").addEventListener("click", function () {
+                firmaPad.clear();
+            });
+            document.getElementById("clearSello").addEventListener("click", function () {
+                selloPad.clear();
+            });
 
             document.getElementById("generate-pdf").addEventListener("click", function (event) {
                 event.preventDefault();

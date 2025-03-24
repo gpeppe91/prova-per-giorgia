@@ -41,6 +41,8 @@ def fill_pdf():
     SELLO_X, SELLO_Y = mm_to_pt(40), invert_y(270)
 
     def convert_base64_to_png(image_base64):
+        if not image_base64.startswith("data:image/png;base64,"):
+            return None
         try:
             image_data = base64.b64decode(image_base64.split(",")[1])
             image = Image.open(io.BytesIO(image_data)).convert("RGBA")
@@ -66,9 +68,9 @@ def fill_pdf():
             c.drawString(NIE_X, NIE_Y, nie)
 
             if firma_path:
-                c.drawImage(firma_path, FIRMA_X, FIRMA_Y, width=120, height=60, mask="auto")
+                c.drawImage(firma_path, FIRMA_X, FIRMA_Y, width=120, height=60, mask=None)
             if sello_path:
-                c.drawImage(sello_path, SELLO_X, SELLO_Y, width=120, height=60, mask="auto")
+                c.drawImage(sello_path, SELLO_X, SELLO_Y, width=120, height=60, mask=None)
 
             c.save()
             overlay_pdf.seek(0)
