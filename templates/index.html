@@ -10,9 +10,8 @@
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             background-color: #f4f4f4;
             padding: 20px;
@@ -29,6 +28,7 @@
             text-align: center;
             max-width: 500px;
             width: 90%;
+            overflow: hidden;
         }
 
         /* Logo centrato */
@@ -40,13 +40,6 @@
 
         .logo {
             max-width: 150px;
-        }
-
-        /* Testo esplicativo */
-        .description {
-            font-size: 14px;
-            text-align: justify;
-            margin-bottom: 15px;
         }
 
         /* Pulsanti */
@@ -61,63 +54,18 @@
             margin-bottom: 10px;
         }
 
-        .pdf-button:hover { background: #218838; }
-        .generate-button:hover, .clear-button:hover { background: #0056b3; }
-
-        /* Form */
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .pdf-button:hover, .generate-button:hover, .clear-button:hover {
+            background: #0056b3;
         }
-
-        label {
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        /* Stile per le firme */
-        canvas {
-            border: 2px solid #000;
-            border-radius: 5px;
-            background: white;
-            margin-top: 5px;
-            width: 100%;
-            max-width: 300px;
-            height: 100px;
-        }
-
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- 📌 LOGO -->
         <div class="logo-container">
             <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
         </div>
 
-        <!-- 📌 Descrizione del documento -->
-        <div class="description">
-            <strong>Il documento "epis.pdf"</strong> è un modulo per la consegna di dispositivi di protezione individuale (DPI) ai lavoratori.<br><br>
-            Il modulo attesta che, in conformità con l'art. 17 della Legge 31/95 sulla Prevenzione dei Rischi sul Lavoro, l'azienda fornisce ai propri dipendenti i DPI necessari per svolgere le proprie mansioni in sicurezza. Inoltre, ricorda ai lavoratori l'obbligo, sancito dall'art. 29 della stessa legge, di utilizzare correttamente tali dispositivi secondo le istruzioni ricevute.<br><br>
-            In sostanza, il documento serve a formalizzare e documentare la consegna dei dispositivi di protezione individuale da parte dell'azienda ai lavoratori, nel rispetto delle normative sulla sicurezza sul lavoro.
-        </div>
-
-        <!-- 📌 Pulsante per aprire il modello PDF -->
         <button class="pdf-button" onclick="openPDF()">Visualizza Modello PDF</button>
-
-        <!-- 📌 Testo prima del form -->
-        <p><strong>Per facilitarti la compilazione del PDF, completa questa form!</strong><br>Ricorda di mandarlo a <strong>giorgia@gmail.com</strong></p>
-
         <h1>Compila il modulo</h1>
 
         <form id="pdfForm">
@@ -129,33 +77,34 @@
 
             <label for="firma">Firma:</label>
             <canvas id="firmaCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="firmaPad.clear()">Cancella Firma</button>
+            <button type="button" class="clear-button" onclick="clearCanvas('firmaCanvas')">Cancella Firma</button>
 
             <label for="sello">Sello:</label>
             <canvas id="selloCanvas"></canvas>
-            <button type="button" class="clear-button" onclick="selloPad.clear()">Cancella Sello</button>
+            <button type="button" class="clear-button" onclick="clearCanvas('selloCanvas')">Cancella Sello</button>
 
             <button type="button" class="generate-button" id="generate-pdf">Genera PDF</button>
         </form>
     </div>
-		   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <script>
-        // 📌 Apri il modello PDF in una nuova scheda
         function openPDF() {
             window.open("{{ url_for('static', filename='modello.pdf') }}", "_blank");
         }
 
-        // 📌 Inizializza SignaturePad per firma e sello
-        document.addEventListener("DOMContentLoaded", function () {
-            const firmaCanvas = document.getElementById("firmaCanvas");
-            const firmaPad = new SignaturePad(firmaCanvas);
+        function clearCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
-            const selloCanvas = document.getElementById("selloCanvas");
-            const selloPad = new SignaturePad(selloCanvas);
+        document.addEventListener("DOMContentLoaded", function () {
+            const firmaPad = new SignaturePad(document.getElementById("firmaCanvas"));
+            const selloPad = new SignaturePad(document.getElementById("selloCanvas"));
 
             document.getElementById("generate-pdf").addEventListener("click", function (event) {
                 event.preventDefault();
-
                 const nomeCognome = document.getElementById("nome_cognome").value;
                 const nie = document.getElementById("nie").value;
                 const firma = firmaPad.toDataURL();
@@ -164,19 +113,14 @@
                 fetch("/fill-pdf", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        nome_cognome: nomeCognome,
-                        nie: nie,
-                        firma: firma,
-                        sello: sello
-                    })
+                    body: JSON.stringify({ nome_cognome, nie, firma, sello })
                 })
                 .then(response => response.blob())
                 .then(blob => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = "documento_compilato.pdf";
+                    a.download = nomeCognome + "_documentoFirmato.pdf";
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
@@ -185,7 +129,5 @@
             });
         });
     </script>
-
-
 </body>
 </html>
