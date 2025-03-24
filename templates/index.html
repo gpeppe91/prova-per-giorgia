@@ -42,6 +42,13 @@
             max-width: 150px;
         }
 
+        /* Descrizione */
+        .description {
+            font-size: 14px;
+            text-align: justify;
+            margin-bottom: 15px;
+        }
+
         /* Pulsanti */
         .pdf-button, .generate-button, .clear-button {
             background: #007bff;
@@ -57,12 +64,50 @@
         .pdf-button:hover, .generate-button:hover, .clear-button:hover {
             background: #0056b3;
         }
+
+        /* Stile del form */
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        label, input, canvas, button {
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            text-align: left;
+        }
+
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        canvas {
+            border: 2px solid #000;
+            border-radius: 5px;
+            background: white;
+            height: 100px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo-container">
             <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+        </div>
+
+        <div class="description">
+            <strong>Il documento "epis.pdf"</strong> è un modulo per la consegna di dispositivi di protezione individuale (DPI) ai lavoratori.<br><br>
+            Il modulo attesta che, in conformità con l'art. 17 della Legge 31/95 sulla Prevenzione dei Rischi sul Lavoro, l'azienda fornisce ai propri dipendenti i DPI necessari per svolgere le proprie mansioni in sicurezza. Inoltre, ricorda ai lavoratori l'obbligo, sancito dall'art. 29 della stessa legge, di utilizzare correttamente tali dispositivi secondo le istruzioni ricevute.<br><br>
+            In sostanza, il documento serve a formalizzare e documentare la consegna dei dispositivi di protezione individuale da parte dell'azienda ai lavoratori, nel rispetto delle normative sulla sicurezza sul lavoro.
         </div>
 
         <button class="pdf-button" onclick="openPDF()">Visualizza Modello PDF</button>
